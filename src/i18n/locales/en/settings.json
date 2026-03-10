@@ -10,6 +10,27 @@
     "system": "System",
     "language": "Language"
   },
+  "account": {
+    "title": "Account",
+    "description": "Sign in to use cloud-based capabilities.",
+    "notLoggedIn": "You are not logged in."
+  },
+  "serviceMode": {
+    "title": "Service Mode",
+    "description": "Choose how ClawX connects to model providers.",
+    "cloud": {
+      "title": "Cloud Mode (Recommended)",
+      "description": "Use your ClawX account through backend LLM proxy without configuring API keys.",
+      "loginHint": "Cloud mode requires a valid SSO login session.",
+      "login": "Login",
+      "logout": "Logout",
+      "loggedInAs": "Signed in as {{email}}"
+    },
+    "local": {
+      "title": "Local Mode",
+      "description": "Use your own API keys and connect directly to providers."
+    }
+  },
   "aiProviders": {
     "title": "AI Providers",
     "description": "Configure your AI model providers and API keys",

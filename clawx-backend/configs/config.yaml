@@ -1,0 +1,30 @@
+server:
+  port: 9090
+  mode: release
+
+auth:
+  sso_check_jwt_url: "http://sureup-laravel/api/v1/internal/checkjwt"
+  internal_token: "${INTERNAL_SERVICE_TOKEN}"
+
+billing:
+  base_url: "http://billing-service:9988"
+
+providers:
+  openai:
+    api_key: "${OPENAI_API_KEY}"
+    base_url: "https://api.openai.com/v1"
+  anthropic:
+    api_key: "${ANTHROPIC_API_KEY}"
+    base_url: "https://api.anthropic.com/v1"
+  google:
+    api_key: "${GOOGLE_API_KEY}"
+    base_url: "https://generativelanguage.googleapis.com/v1beta"
+  ark:
+    api_key: "${ARK_API_KEY}"
+    base_url: "https://ark.cn-beijing.volces.com/api/v3"
+  moonshot:
+    api_key: "${MOONSHOT_API_KEY}"
+    base_url: "https://api.moonshot.cn/v1"
+
+logging:
+  level: info

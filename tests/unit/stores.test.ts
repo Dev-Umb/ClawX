@@ -19,6 +19,7 @@ describe('Settings Store', () => {
       autoDownloadUpdate: false,
       startMinimized: false,
       launchAtStartup: false,
+      serviceMode: 'local',
       updateChannel: 'stable',
     });
   });
@@ -28,6 +29,7 @@ describe('Settings Store', () => {
     expect(state.theme).toBe('system');
     expect(state.sidebarCollapsed).toBe(false);
     expect(state.gatewayAutoStart).toBe(true);
+    expect(state.serviceMode).toBe('local');
   });
   
   it('should update theme', () => {

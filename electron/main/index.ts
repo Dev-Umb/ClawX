@@ -27,6 +27,8 @@ import { deviceOAuthManager } from '../utils/device-oauth';
 import { browserOAuthManager } from '../utils/browser-oauth';
 import { whatsAppLoginManager } from '../utils/whatsapp-login';
 import { syncAllProviderAuthToRuntime } from '../services/providers/provider-runtime-sync';
+import { extractDeepLinkFromArgv, handleAuthCallback } from './auth-callback';
+import { getAuthService } from '../services/auth/auth-service';
 
 // Disable GPU hardware acceleration globally for maximum stability across
 // all GPU configurations (no GPU, integrated, discrete).
@@ -66,6 +68,7 @@ let mainWindow: BrowserWindow | null = null;
 const gatewayManager = new GatewayManager();
 const clawHubService = new ClawHubService();
 const hostEventBus = new HostEventBus();
+const authService = getAuthService();
 let hostApiServer: Server | null = null;
 
 /**
@@ -93,6 +96,16 @@ function getAppIcon(): Electron.NativeImage | undefined {
       : join(iconsDir, 'icon.png');
   const icon = nativeImage.createFromPath(iconPath);
   return icon.isEmpty() ? undefined : icon;
+}
+
+function registerDeepLinkProtocol(): void {
+  if (process.defaultApp) {
+    if (process.argv.length >= 2) {
+      app.setAsDefaultProtocolClient('clawx', process.execPath, [process.argv[1]]);
+    }
+    return;
+  }
+  app.setAsDefaultProtocolClient('clawx');
 }
 
 /**
@@ -158,6 +171,7 @@ async function initialize(): Promise<void> {
 
   // Apply persisted proxy settings before creating windows or network requests.
   await applyProxySettings();
+  registerDeepLinkProtocol();
 
   // Set application menu
   createMenu();
@@ -192,14 +206,24 @@ async function initialize(): Promise<void> {
   );
 
   // Register IPC handlers
-  registerIpcHandlers(gatewayManager, clawHubService, mainWindow);
+  registerIpcHandlers(gatewayManager, clawHubService, mainWindow, authService);
 
   hostApiServer = startHostApiServer({
     gatewayManager,
     clawHubService,
+    authService,
     eventBus: hostEventBus,
     mainWindow,
   });
+
+  authService.on('changed', (payload) => {
+    hostEventBus.emit('auth:changed', payload);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('auth:changed', payload);
+    }
+  });
+
+  await authService.initialize();
 
   // Register update handlers
   registerUpdateHandlers(appUpdater, mainWindow);
@@ -337,8 +361,17 @@ async function initialize(): Promise<void> {
   });
 }
 
+app.on('open-url', (event, url) => {
+  event.preventDefault();
+  void handleAuthCallback(url, authService, mainWindow);
+});
+
 // When a second instance is launched, focus the existing window instead.
-app.on('second-instance', () => {
+app.on('second-instance', (_event, argv) => {
+  const deepLink = extractDeepLinkFromArgv(argv);
+  if (deepLink) {
+    void handleAuthCallback(deepLink, authService, mainWindow);
+  }
   if (mainWindow) {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.show();
@@ -348,7 +381,12 @@ app.on('second-instance', () => {
 
 // Application lifecycle
 app.whenReady().then(() => {
-  initialize();
+  void initialize();
+
+  const initialDeepLink = extractDeepLinkFromArgv(process.argv);
+  if (initialDeepLink) {
+    void handleAuthCallback(initialDeepLink, authService, mainWindow);
+  }
 
   // Register activate handler AFTER app is ready to prevent
   // "Cannot create BrowserWindow before app is ready" on macOS.

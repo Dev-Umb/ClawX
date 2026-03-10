@@ -112,6 +112,9 @@ Extend your AI agents with pre-built skills. Browse, install, and manage skills 
 ### 🔐 Secure Provider Integration
 Connect to multiple AI providers (OpenAI, Anthropic, and more) with credentials stored securely in your system's native keychain.
 
+### 🔑 SSO Account Login (Desktop Deep Link)
+Sign in through enterprise SSO in your system browser and return to ClawX via `clawx://auth/callback` deep link, with persistent login status and auto-refresh token support.
+
 ### 🌙 Adaptive Theming
 Light mode, dark mode, or system-synchronized themes. ClawX adapts to your preferences automatically.
 

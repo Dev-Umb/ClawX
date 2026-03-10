@@ -51,5 +51,13 @@
         "notRunning": "网关未运行",
         "notRunningDesc": "OpenClaw 网关需要运行才能使用此功能。它将自动启动，或者您可以从设置中启动。",
         "warning": "网关未运行。"
+    },
+    "auth": {
+        "login": "登录",
+        "logout": "退出登录",
+        "loginRequired": "需要登录",
+        "loginRequiredDesc": "此功能需要登录后使用。",
+        "loggingIn": "登录中...",
+        "accountSettings": "账户设置"
     }
 }

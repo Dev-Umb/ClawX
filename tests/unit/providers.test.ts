@@ -54,8 +54,29 @@ describe('provider metadata', () => {
 
   it('keeps builtin provider sources in sync', () => {
     expect(BUILTIN_PROVIDER_TYPES).toEqual(
-      expect.arrayContaining(['anthropic', 'openai', 'google', 'openrouter', 'ark', 'moonshot', 'siliconflow', 'minimax-portal', 'minimax-portal-cn', 'qwen-portal', 'ollama'])
+      expect.arrayContaining(['anthropic', 'openai', 'google', 'clawx-cloud', 'openrouter', 'ark', 'moonshot', 'siliconflow', 'minimax-portal', 'minimax-portal-cn', 'qwen-portal', 'ollama'])
     );
+  });
+
+  it('registers clawx cloud provider metadata', () => {
+    expect(PROVIDER_TYPES).toContain('clawx-cloud');
+    expect(PROVIDER_TYPE_INFO).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'clawx-cloud',
+          name: 'ClawX Cloud',
+          requiresApiKey: false,
+          defaultModelId: 'gpt-4o',
+        }),
+      ]),
+    );
+    expect(BUILTIN_PROVIDER_TYPES).toContain('clawx-cloud');
+    expect(getProviderEnvVar('clawx-cloud')).toBe('CLAWX_CLOUD_TOKEN');
+    expect(getProviderConfig('clawx-cloud')).toEqual({
+      baseUrl: 'http://127.0.0.1:9090/api/v1/llm',
+      api: 'openai-completions',
+      apiKeyEnv: 'CLAWX_CLOUD_TOKEN',
+    });
   });
 
   it('uses OpenAI-compatible Ollama default base URL', () => {

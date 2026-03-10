@@ -10,6 +10,27 @@
     "system": "システム",
     "language": "言語"
   },
+  "account": {
+    "title": "アカウント",
+    "description": "クラウド機能を使うにはログインしてください。",
+    "notLoggedIn": "ログインしていません。"
+  },
+  "serviceMode": {
+    "title": "サービスモード",
+    "description": "ClawX がモデルに接続する方式を選択します。",
+    "cloud": {
+      "title": "クラウドモード（推奨）",
+      "description": "ClawX アカウント経由でバックエンド LLM プロキシを利用します。API キー設定は不要です。",
+      "loginHint": "クラウドモードには有効な SSO ログインセッションが必要です。",
+      "login": "ログイン",
+      "logout": "ログアウト",
+      "loggedInAs": "ログイン中: {{email}}"
+    },
+    "local": {
+      "title": "ローカルモード",
+      "description": "自分の API キーで各プロバイダーへ直接接続します。"
+    }
+  },
   "aiProviders": {
     "title": "AI プロバイダー",
     "description": "AI モデルプロバイダーと API キーを設定",

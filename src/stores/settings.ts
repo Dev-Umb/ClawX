@@ -9,6 +9,7 @@ import { hostApiFetch } from '@/lib/host-api';
 
 type Theme = 'light' | 'dark' | 'system';
 type UpdateChannel = 'stable' | 'beta' | 'dev';
+type ServiceMode = 'cloud' | 'local';
 
 interface SettingsState {
   // General
@@ -16,6 +17,7 @@ interface SettingsState {
   language: string;
   startMinimized: boolean;
   launchAtStartup: boolean;
+  serviceMode: ServiceMode;
 
   // Gateway
   gatewayAutoStart: boolean;
@@ -45,6 +47,7 @@ interface SettingsState {
   setLanguage: (language: string) => void;
   setStartMinimized: (value: boolean) => void;
   setLaunchAtStartup: (value: boolean) => void;
+  setServiceMode: (mode: ServiceMode) => void;
   setGatewayAutoStart: (value: boolean) => void;
   setGatewayPort: (port: number) => void;
   setProxyEnabled: (value: boolean) => void;
@@ -72,6 +75,7 @@ const defaultSettings = {
   })(),
   startMinimized: false,
   launchAtStartup: false,
+  serviceMode: 'local' as ServiceMode,
   gatewayAutoStart: true,
   gatewayPort: 18789,
   proxyEnabled: false,
@@ -117,6 +121,13 @@ export const useSettingsStore = create<SettingsState>()(
       },
       setStartMinimized: (startMinimized) => set({ startMinimized }),
       setLaunchAtStartup: (launchAtStartup) => set({ launchAtStartup }),
+      setServiceMode: (serviceMode) => {
+        set({ serviceMode });
+        void hostApiFetch('/api/settings/serviceMode', {
+          method: 'PUT',
+          body: JSON.stringify({ value: serviceMode }),
+        }).catch(() => {});
+      },
       setGatewayAutoStart: (gatewayAutoStart) => {
         set({ gatewayAutoStart });
         void hostApiFetch('/api/settings/gatewayAutoStart', {

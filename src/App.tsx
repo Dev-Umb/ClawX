@@ -19,7 +19,9 @@ import { Settings } from './pages/Settings';
 import { Setup } from './pages/Setup';
 import { useSettingsStore } from './stores/settings';
 import { useGatewayStore } from './stores/gateway';
+import { useAuthStore } from './stores/auth';
 import { applyGatewayTransportPreference } from './lib/api-client';
+import { ensureCloudProvider, removeCloudProviders } from './lib/cloud-provider-sync';
 
 
 /**
@@ -93,7 +95,11 @@ function App() {
   const theme = useSettingsStore((state) => state.theme);
   const language = useSettingsStore((state) => state.language);
   const setupComplete = useSettingsStore((state) => state.setupComplete);
+  const serviceMode = useSettingsStore((state) => state.serviceMode);
   const initGateway = useGatewayStore((state) => state.init);
+  const initAuth = useAuthStore((state) => state.init);
+  const authStatus = useAuthStore((state) => state.status);
+  const authAccessToken = useAuthStore((state) => state.accessToken);
 
   useEffect(() => {
     initSettings();
@@ -110,6 +116,10 @@ function App() {
   useEffect(() => {
     initGateway();
   }, [initGateway]);
+
+  useEffect(() => {
+    void initAuth();
+  }, [initAuth]);
 
   // Redirect to setup wizard if not complete
   useEffect(() => {
@@ -154,6 +164,28 @@ function App() {
   useEffect(() => {
     applyGatewayTransportPreference();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        if (serviceMode === 'cloud' && authStatus === 'authenticated' && authAccessToken) {
+          await ensureCloudProvider(authAccessToken);
+          return;
+        }
+        await removeCloudProviders();
+      } catch (error) {
+        if (!cancelled) {
+          console.warn('cloud provider sync failed:', error);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [serviceMode, authStatus, authAccessToken]);
 
   return (
     <ErrorBoundary>

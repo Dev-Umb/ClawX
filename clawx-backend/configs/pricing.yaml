@@ -1,0 +1,29 @@
+points_per_cent: 1.0
+
+models:
+  - provider: openai
+    model: "gpt-4o"
+    input_per_1m: 2.50
+    output_per_1m: 10.00
+  - provider: openai
+    model: "gpt-4o-mini"
+    input_per_1m: 0.15
+    output_per_1m: 0.60
+  - provider: anthropic
+    model: "claude-sonnet-4-20250514"
+    input_per_1m: 3.00
+    output_per_1m: 15.00
+  - provider: google
+    model: "gemini-2.0-flash"
+    input_per_1m: 0.10
+    output_per_1m: 0.40
+  - provider: ark
+    model: "ep-*"
+    input_per_1m: 0.80
+    output_per_1m: 2.00
+
+default:
+  provider: default
+  model: "*"
+  input_per_1m: 3.00
+  output_per_1m: 15.00

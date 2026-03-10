@@ -27,7 +27,9 @@ import { toast } from 'sonner';
 import { useSettingsStore } from '@/stores/settings';
 import { useGatewayStore } from '@/stores/gateway';
 import { useUpdateStore } from '@/stores/update';
+import { useAuthStore } from '@/stores/auth';
 import { UpdateSettings } from '@/components/settings/UpdateSettings';
+import { ServiceModeSettings } from '@/components/settings/ServiceModeSettings';
 import {
   getGatewayWsDiagnosticEnabled,
   invokeIpc,
@@ -44,6 +46,8 @@ import {
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES } from '@/i18n';
 import { hostApiFetch } from '@/lib/host-api';
+import { LoginButton } from '@/components/auth/LoginButton';
+import { UserAvatar } from '@/components/auth/UserAvatar';
 type ControlUiInfo = {
   url: string;
   token: string;
@@ -52,6 +56,7 @@ type ControlUiInfo = {
 
 export function Settings() {
   const { t } = useTranslation('settings');
+  const { t: commonT } = useTranslation('common');
   const {
     theme,
     setTheme,
@@ -78,6 +83,9 @@ export function Settings() {
     devModeUnlocked,
     setDevModeUnlocked,
   } = useSettingsStore();
+  const authStatus = useAuthStore((state) => state.status);
+  const authUser = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
   const { status: gatewayStatus, restart: restartGateway } = useGatewayStore();
   const currentVersion = useUpdateStore((state) => state.currentVersion);
@@ -398,6 +406,38 @@ export function Settings() {
         </p>
       </div>
 
+      <Card className="order-1">
+        <CardHeader>
+          <CardTitle>{t('account.title')}</CardTitle>
+          <CardDescription>{t('account.description')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {authStatus === 'authenticated' && authUser ? (
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 p-3">
+              <div className="flex items-center gap-3">
+                <UserAvatar name={authUser.name} avatarUrl={authUser.avatarUrl} />
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{authUser.name}</p>
+                  <p className="truncate text-sm text-muted-foreground">{authUser.email}</p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => { void logout(); }}
+              >
+                {commonT('auth.logout')}
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 p-3">
+              <p className="text-sm text-muted-foreground">{t('account.notLoggedIn')}</p>
+              <LoginButton />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Appearance */}
       <Card className="order-2">
         <CardHeader>
@@ -451,6 +491,9 @@ export function Settings() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Gateway */}
+      <ServiceModeSettings />
 
       {/* Gateway */}
       <Card className="order-1">

@@ -25,6 +25,8 @@ export interface AppSettings {
   language: string;
   startMinimized: boolean;
   launchAtStartup: boolean;
+  serviceMode: 'cloud' | 'local';
+  authServerUrl: string;
   
   // Gateway
   gatewayAutoStart: boolean;
@@ -62,6 +64,8 @@ const defaults: AppSettings = {
   language: 'en',
   startMinimized: false,
   launchAtStartup: false,
+  serviceMode: 'local',
+  authServerUrl: 'http://127.0.0.1:8000',
   
   // Gateway
   gatewayAutoStart: true,

@@ -51,5 +51,13 @@
         "notRunning": "Gateway Not Running",
         "notRunningDesc": "The OpenClaw Gateway needs to be running to use this feature. It will start automatically, or you can start it from Settings.",
         "warning": "Gateway is not running."
+    },
+    "auth": {
+        "login": "Login",
+        "logout": "Logout",
+        "loginRequired": "Login Required",
+        "loginRequiredDesc": "This feature requires an authenticated account.",
+        "loggingIn": "Logging in...",
+        "accountSettings": "Account Settings"
     }
 }

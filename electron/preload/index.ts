@@ -56,6 +56,11 @@ const electronAPI = {
         'settings:getAll',
         'settings:reset',
         'usage:recentTokenHistory',
+        // Auth
+        'auth:status',
+        'auth:login',
+        'auth:logout',
+        'auth:refresh',
         // Update
         'update:status',
         'update:version',
@@ -174,6 +179,7 @@ const electronAPI = {
         'oauth:code',
         'oauth:success',
         'oauth:error',
+        'auth:changed',
         'openclaw:cli-installed',
       ];
 
@@ -217,6 +223,7 @@ const electronAPI = {
         'oauth:code',
         'oauth:success',
         'oauth:error',
+        'auth:changed',
       ];
 
       if (validChannels.includes(channel)) {

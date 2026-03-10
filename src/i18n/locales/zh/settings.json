@@ -10,6 +10,27 @@
     "system": "跟随系统",
     "language": "语言"
   },
+  "account": {
+    "title": "账户",
+    "description": "登录后可使用云端能力。",
+    "notLoggedIn": "您尚未登录。"
+  },
+  "serviceMode": {
+    "title": "服务模式",
+    "description": "选择 ClawX 连接模型服务的方式。",
+    "cloud": {
+      "title": "云端模式（推荐）",
+      "description": "通过 ClawX 账户使用后端 LLM 代理，无需手动配置 API Key。",
+      "loginHint": "云端模式需要有效的 SSO 登录会话。",
+      "login": "登录",
+      "logout": "退出登录",
+      "loggedInAs": "当前登录：{{email}}"
+    },
+    "local": {
+      "title": "本地模式",
+      "description": "使用自己的 API Key 直连模型服务。"
+    }
+  },
   "aiProviders": {
     "title": "AI 模型提供商",
     "description": "配置 AI 模型提供商和 API 密钥",

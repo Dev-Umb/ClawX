@@ -18,6 +18,8 @@ import {
   Trash2,
   Cpu,
   LayoutDashboard,
+  LogOut,
+  UserCog,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/stores/settings';
@@ -28,6 +30,9 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { hostApiFetch } from '@/lib/host-api';
 import { useTranslation } from 'react-i18next';
 import logoSvg from '@/assets/logo.svg';
+import { useAuthStore } from '@/stores/auth';
+import { LoginButton } from '@/components/auth/LoginButton';
+import { UserAvatar } from '@/components/auth/UserAvatar';
 
 type SessionBucketKey =
   | 'today'
@@ -117,6 +122,9 @@ export function Sidebar() {
 
   const navigate = useNavigate();
   const isOnChat = useLocation().pathname === '/';
+  const authStatus = useAuthStore((state) => state.status);
+  const authUser = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
   const getSessionLabel = (key: string, displayName?: string, label?: string) =>
     sessionLabels[key] ?? label ?? displayName ?? key;
@@ -286,6 +294,46 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="p-2 mt-auto">
+        {!sidebarCollapsed && (
+          <div className="mb-2 rounded-lg border border-black/10 bg-white/70 p-2 dark:border-white/10 dark:bg-white/5">
+            {authStatus === 'authenticated' && authUser ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <UserAvatar name={authUser.name} avatarUrl={authUser.avatarUrl} size="sm" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-semibold text-foreground">{authUser.name}</p>
+                    <p className="truncate text-[11px] text-muted-foreground">{authUser.email}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 flex-1 justify-start text-xs"
+                    onClick={() => navigate('/settings')}
+                  >
+                    <UserCog className="mr-1 h-3.5 w-3.5" />
+                    {t('auth.accountSettings')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 flex-1 justify-start text-xs text-destructive hover:text-destructive"
+                    onClick={() => { void logout(); }}
+                  >
+                    <LogOut className="mr-1 h-3.5 w-3.5" />
+                    {t('auth.logout')}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <LoginButton className="w-full justify-start text-sm" />
+            )}
+          </div>
+        )}
+
         {devModeUnlocked && !sidebarCollapsed && (
           <Button
             variant="ghost"

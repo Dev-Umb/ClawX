@@ -9,6 +9,7 @@ import { handleProviderRoutes } from './routes/providers';
 import { handleChannelRoutes } from './routes/channels';
 import { handleLogRoutes } from './routes/logs';
 import { handleUsageRoutes } from './routes/usage';
+import { handleAuthRoutes } from './routes/auth';
 import { handleSkillRoutes } from './routes/skills';
 import { handleFileRoutes } from './routes/files';
 import { handleSessionRoutes } from './routes/sessions';
@@ -26,6 +27,7 @@ const routeHandlers: RouteHandler[] = [
   handleAppRoutes,
   handleGatewayRoutes,
   handleSettingsRoutes,
+  handleAuthRoutes,
   handleProviderRoutes,
   handleChannelRoutes,
   handleSkillRoutes,

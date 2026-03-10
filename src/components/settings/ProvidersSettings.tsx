@@ -92,6 +92,7 @@ function getAuthModeLabel(
 export function ProvidersSettings() {
   const { t } = useTranslation('settings');
   const devModeUnlocked = useSettingsStore((state) => state.devModeUnlocked);
+  const serviceMode = useSettingsStore((state) => state.serviceMode);
   const {
     statuses,
     accounts,
@@ -110,9 +111,17 @@ export function ProvidersSettings() {
   const [editingProvider, setEditingProvider] = useState<string | null>(null);
   const vendorMap = new Map(vendors.map((vendor) => [vendor.id, vendor]));
   const existingVendorIds = new Set(accounts.map((account) => account.vendorId));
-  const displayProviders = useMemo(
+  const allDisplayProviders = useMemo(
     () => buildProviderListItems(accounts, statuses, vendors, defaultAccountId),
     [accounts, statuses, vendors, defaultAccountId],
+  );
+  const displayProviders = useMemo(
+    () => allDisplayProviders.filter((item) => (
+      serviceMode === 'cloud'
+        ? item.account.vendorId === 'clawx-cloud'
+        : item.account.vendorId !== 'clawx-cloud'
+    )),
+    [allDisplayProviders, serviceMode],
   );
 
   // Fetch providers on mount
@@ -180,10 +189,12 @@ export function ProvidersSettings() {
         <h2 className="text-3xl font-serif text-foreground font-normal tracking-tight" style={{ fontFamily: 'Georgia, Cambria, "Times New Roman", Times, serif' }}>
           {t('aiProviders.title', 'AI Providers')}
         </h2>
-        <Button onClick={() => setShowAddDialog(true)} className="rounded-full px-5 h-9 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-foreground border border-transparent shadow-none font-medium text-[13px]">
-          <Plus className="h-4 w-4 mr-2" />
-          {t('aiProviders.add')}
-        </Button>
+        {serviceMode !== 'cloud' && (
+          <Button onClick={() => setShowAddDialog(true)} className="rounded-full px-5 h-9 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-foreground border border-transparent shadow-none font-medium text-[13px]">
+            <Plus className="h-4 w-4 mr-2" />
+            {t('aiProviders.add')}
+          </Button>
+        )}
       </div>
 
       {loading ? (
@@ -197,7 +208,7 @@ export function ProvidersSettings() {
           <p className="text-[13px] text-center mb-6 max-w-sm">
             {t('aiProviders.empty.desc')}
           </p>
-          <Button onClick={() => setShowAddDialog(true)} className="rounded-full px-6 h-10 bg-[#0a84ff] hover:bg-[#007aff] text-white">
+          <Button onClick={() => setShowAddDialog(true)} className="rounded-full px-6 h-10 bg-[#0a84ff] hover:bg-[#007aff] text-white" disabled={serviceMode === 'cloud'}>
             <Plus className="h-4 w-4 mr-2" />
             {t('aiProviders.empty.cta')}
           </Button>
@@ -240,7 +251,7 @@ export function ProvidersSettings() {
       )}
 
       {/* Add Provider Dialog */}
-      {showAddDialog && (
+      {showAddDialog && serviceMode !== 'cloud' && (
         <AddProviderDialog
           existingVendorIds={existingVendorIds}
           vendors={vendors}
@@ -831,6 +842,9 @@ function AddProviderDialog({
   };
 
   const availableTypes = PROVIDER_TYPE_INFO.filter((type) => {
+    if (type.id === 'clawx-cloud') {
+      return false;
+    }
     const vendor = vendorMap.get(type.id);
     if (!vendor) {
       return !existingVendorIds.has(type.id) || type.id === 'custom';

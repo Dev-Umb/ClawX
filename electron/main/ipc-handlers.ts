@@ -51,6 +51,7 @@ import {
 import { validateApiKeyWithProvider } from '../services/providers/provider-validation';
 import { appUpdater } from './updater';
 import { PORTS } from '../utils/config';
+import type { AuthService } from '../services/auth/auth-service';
 
 type AppRequest = {
   id?: string;
@@ -76,10 +77,11 @@ type AppResponse = {
 export function registerIpcHandlers(
   gatewayManager: GatewayManager,
   clawHubService: ClawHubService,
-  mainWindow: BrowserWindow
+  mainWindow: BrowserWindow,
+  authService: AuthService,
 ): void {
   // Unified request protocol (non-breaking: legacy channels remain available)
-  registerUnifiedRequestHandlers(gatewayManager);
+  registerUnifiedRequestHandlers(gatewayManager, authService);
   registerHostApiProxyHandlers();
 
   // Gateway handlers
@@ -108,6 +110,9 @@ export function registerIpcHandlers(
 
   // Settings handlers
   registerSettingsHandlers(gatewayManager);
+
+  // Auth handlers
+  registerAuthHandlers(authService);
 
   // UV handlers
   registerUvHandlers();
@@ -219,7 +224,7 @@ function isProxyKey(key: keyof AppSettings): boolean {
   );
 }
 
-function registerUnifiedRequestHandlers(gatewayManager: GatewayManager): void {
+function registerUnifiedRequestHandlers(gatewayManager: GatewayManager, authService: AuthService): void {
   const providerService = getProviderService();
   const handleProxySettingsChange = async () => {
     const settings = await getAllSettings();
@@ -703,6 +708,43 @@ function registerUnifiedRequestHandlers(gatewayManager: GatewayManager): void {
             const settings = await getAllSettings();
             await handleProxySettingsChange();
             data = { success: true, settings };
+            break;
+          }
+          return {
+            id: request.id,
+            ok: false,
+            error: {
+              code: 'UNSUPPORTED',
+              message: `APP_REQUEST_UNSUPPORTED:${request.module}.${request.action}`,
+            },
+          };
+        }
+        case 'auth': {
+          if (request.action === 'status') {
+            data = await authService.getAuthStatus();
+            break;
+          }
+          if (request.action === 'login') {
+            await authService.initiateLogin();
+            data = { success: true };
+            break;
+          }
+          if (request.action === 'logout') {
+            await authService.logout();
+            data = { success: true };
+            break;
+          }
+          if (request.action === 'refresh') {
+            data = { success: await authService.refreshAccessToken() };
+            break;
+          }
+          if (request.action === 'callback') {
+            const payload = request.payload as { code?: string; state?: string } | undefined;
+            if (!payload?.code || !payload?.state) {
+              throw new Error('Invalid auth.callback payload');
+            }
+            await authService.exchangeCode(payload.code, payload.state);
+            data = { success: true };
             break;
           }
           return {
@@ -2188,6 +2230,27 @@ function registerSettingsHandlers(gatewayManager: GatewayManager): void {
     return { success: true, settings };
   });
 }
+
+function registerAuthHandlers(authService: AuthService): void {
+  ipcMain.handle('auth:status', async () => {
+    return await authService.getAuthStatus();
+  });
+
+  ipcMain.handle('auth:login', async () => {
+    await authService.initiateLogin();
+    return { success: true };
+  });
+
+  ipcMain.handle('auth:logout', async () => {
+    await authService.logout();
+    return { success: true };
+  });
+
+  ipcMain.handle('auth:refresh', async () => {
+    return { success: await authService.refreshAccessToken() };
+  });
+}
+
 function registerUsageHandlers(): void {
   ipcMain.handle('usage:recentTokenHistory', async (_, limit?: number) => {
     const safeLimit = typeof limit === 'number' && Number.isFinite(limit)

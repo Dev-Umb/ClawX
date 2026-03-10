@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  clawx-backend:
+    build: .
+    container_name: clawx-backend
+    ports:
+      - "9090:9090"
+    environment:
+      CLAWX_BACKEND_CONFIG: /app/configs/config.yaml
+      OPENAI_API_KEY: mock-openai-key
+      ANTHROPIC_API_KEY: mock-anthropic-key
+      GOOGLE_API_KEY: mock-google-key
+      ARK_API_KEY: mock-ark-key
+      MOONSHOT_API_KEY: mock-moonshot-key
