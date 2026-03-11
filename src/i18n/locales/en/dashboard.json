@@ -51,6 +51,6 @@
         "output": "Output {{value}}",
         "cacheRead": "Cache read {{value}}",
         "cacheWrite": "Cache write {{value}}",
-        "cost": "Cost ${{amount}}"
+        "pointsSpent": "{{amount}} points spent"
     }
 }

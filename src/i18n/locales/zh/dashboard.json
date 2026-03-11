@@ -51,6 +51,6 @@
         "output": "输出 {{value}}",
         "cacheRead": "缓存读取 {{value}}",
         "cacheWrite": "缓存写入 {{value}}",
-        "cost": "费用 ${{amount}}"
+        "pointsSpent": "消耗 {{amount}} 积分"
     }
 }

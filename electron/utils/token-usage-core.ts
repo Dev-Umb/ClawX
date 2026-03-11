@@ -10,6 +10,7 @@ export interface TokenUsageHistoryEntry {
   cacheWriteTokens: number;
   totalTokens: number;
   costUsd?: number;
+  pointsSpent?: number;
 }
 
 interface TranscriptUsageShape {
@@ -24,7 +25,46 @@ interface TranscriptUsageShape {
   cost?: {
     total?: number;
   };
+  points?: number;
 }
+
+type ModelPricing = {
+  inputPer1M: number;
+  outputPer1M: number;
+};
+
+const DEFAULT_PRICING: ModelPricing = {
+  inputPer1M: 4,
+  outputPer1M: 16,
+};
+const POINTS_PER_USD = 1000;
+
+const PRICING_RULES: Array<{
+  provider?: string;
+  modelPrefix: string;
+  pricing: ModelPricing;
+}> = [
+  {
+    provider: 'ark',
+    modelPrefix: 'doubao-seed-2.0-lite',
+    pricing: DEFAULT_PRICING,
+  },
+  {
+    provider: 'ark',
+    modelPrefix: 'doubao-seed-2-0-lite',
+    pricing: DEFAULT_PRICING,
+  },
+  {
+    provider: 'clawx-cloud',
+    modelPrefix: 'doubao-seed-2.0-lite',
+    pricing: DEFAULT_PRICING,
+  },
+  {
+    provider: 'clawx-cloud',
+    modelPrefix: 'doubao-seed-2-0-lite',
+    pricing: DEFAULT_PRICING,
+  },
+];
 
 interface TranscriptLineShape {
   type?: string;
@@ -68,8 +108,25 @@ export function parseUsageEntriesFromJsonl(
     const cacheReadTokens = usage.cacheRead ?? 0;
     const cacheWriteTokens = usage.cacheWrite ?? 0;
     const totalTokens = usage.total ?? usage.totalTokens ?? inputTokens + outputTokens + cacheReadTokens + cacheWriteTokens;
+    const modelName = message.model ?? message.modelRef;
+    const estimatedCostUsd = estimateCostUsd(
+      message.provider,
+      modelName,
+      inputTokens,
+      outputTokens,
+      cacheReadTokens,
+      cacheWriteTokens,
+    );
+    const rawCostUsd = usage.cost?.total;
+    const costUsd = Number.isFinite(rawCostUsd) && (rawCostUsd as number) > 0
+      ? rawCostUsd
+      : estimatedCostUsd;
+    const rawPointsSpent = usage.points;
+    const pointsSpent = Number.isFinite(rawPointsSpent) && (rawPointsSpent as number) > 0
+      ? Math.ceil(rawPointsSpent as number)
+      : estimatePointsSpent(costUsd);
 
-    if (totalTokens <= 0 && !usage.cost?.total) {
+    if (totalTokens <= 0 && !costUsd && !pointsSpent) {
       continue;
     }
 
@@ -77,16 +134,63 @@ export function parseUsageEntriesFromJsonl(
       timestamp: parsed.timestamp,
       sessionId: context.sessionId,
       agentId: context.agentId,
-      model: message.model ?? message.modelRef,
+      model: modelName,
       provider: message.provider,
       inputTokens,
       outputTokens,
       cacheReadTokens,
       cacheWriteTokens,
       totalTokens,
-      costUsd: usage.cost?.total,
+      costUsd,
+      pointsSpent,
     });
   }
 
   return entries;
+}
+
+function normalizeModelName(model?: string): string {
+  return (model || '').trim().toLowerCase();
+}
+
+function normalizeProvider(provider?: string): string {
+  return (provider || '').trim().toLowerCase();
+}
+
+function estimateCostUsd(
+  provider: string | undefined,
+  model: string | undefined,
+  inputTokens: number,
+  outputTokens: number,
+  cacheReadTokens = 0,
+  cacheWriteTokens = 0,
+): number | undefined {
+  if (inputTokens <= 0 && outputTokens <= 0 && cacheReadTokens <= 0 && cacheWriteTokens <= 0) {
+    return undefined;
+  }
+
+  const normalizedProvider = normalizeProvider(provider);
+  if (normalizedProvider !== 'clawx-cloud' && normalizedProvider !== 'ark') {
+    return undefined;
+  }
+  const normalizedModel = normalizeModelName(model);
+  const matchedRule = PRICING_RULES.find((rule) => {
+    if (rule.provider && normalizeProvider(rule.provider) !== normalizedProvider) {
+      return false;
+    }
+    return normalizedModel.startsWith(normalizeModelName(rule.modelPrefix));
+  });
+  const pricing = matchedRule?.pricing ?? DEFAULT_PRICING;
+  // Keep estimation consistent with backend deduction:
+  // cache read/write tokens are treated as input-priced tokens.
+  const billableInputTokens = inputTokens + Math.max(cacheReadTokens, 0) + Math.max(cacheWriteTokens, 0);
+  const cost = (billableInputTokens * pricing.inputPer1M + outputTokens * pricing.outputPer1M) / 1_000_000;
+  return Number.isFinite(cost) ? cost : undefined;
+}
+
+function estimatePointsSpent(costUsd?: number): number | undefined {
+  if (!Number.isFinite(costUsd) || (costUsd as number) <= 0) {
+    return undefined;
+  }
+  return Math.ceil((costUsd as number) * POINTS_PER_USD);
 }

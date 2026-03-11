@@ -51,6 +51,6 @@
         "output": "出力 {{value}}",
         "cacheRead": "キャッシュ読取 {{value}}",
         "cacheWrite": "キャッシュ書込 {{value}}",
-        "cost": "コスト ${{amount}}"
+        "pointsSpent": "{{amount}} ポイント消費"
     }
 }

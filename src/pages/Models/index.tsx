@@ -23,6 +23,7 @@ type UsageHistoryEntry = {
   cacheWriteTokens: number;
   totalTokens: number;
   costUsd?: number;
+  pointsSpent?: number;
 };
 
 type UsageWindow = '7d' | '30d' | 'all';
@@ -213,8 +214,10 @@ export function Models() {
                           {entry.cacheWriteTokens > 0 && (
                             <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-500"></div>{t('dashboard:recentTokenHistory.cacheWrite', { value: formatTokenCount(entry.cacheWriteTokens) })}</span>
                           )}
-                          {typeof entry.costUsd === 'number' && Number.isFinite(entry.costUsd) && (
-                            <span className="flex items-center gap-1.5 ml-auto text-foreground/80 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-md">{t('dashboard:recentTokenHistory.cost', { amount: entry.costUsd.toFixed(4) })}</span>
+                          {getUsagePointsSpent(entry) != null && (
+                            <span className="flex items-center gap-1.5 ml-auto text-foreground/80 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-md">
+                              {t('dashboard:recentTokenHistory.pointsSpent', { amount: formatTokenCount(getUsagePointsSpent(entry) ?? 0) })}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -261,6 +264,16 @@ export function Models() {
 
 function formatTokenCount(value: number): string {
   return Intl.NumberFormat().format(value);
+}
+
+function getUsagePointsSpent(entry: UsageHistoryEntry): number | null {
+  if (typeof entry.pointsSpent === 'number' && Number.isFinite(entry.pointsSpent) && entry.pointsSpent > 0) {
+    return Math.ceil(entry.pointsSpent);
+  }
+  if (typeof entry.costUsd === 'number' && Number.isFinite(entry.costUsd) && entry.costUsd > 0) {
+    return Math.ceil(entry.costUsd * 1000);
+  }
+  return null;
 }
 
 function formatUsageTimestamp(timestamp: string): string {
